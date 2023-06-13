@@ -1,9 +1,11 @@
 import express, { NextFunction, Request, Response } from "express";
 import morgan from "morgan"
 import {StatusCodes} from "http-status-codes"
+import { getConnection } from "./db";
 
 export async function createApp() : Promise<Express.Application> {
-    
+  
+   const connection =  await getConnection();
 
     const app = express();
 
@@ -24,19 +26,24 @@ export async function createApp() : Promise<Express.Application> {
     })
       
     //routers
-    
+    app.get("/fligths", async (req: Request, res:Response) => {
+     const connection = await getConnection();
+     const result = await connection.manager.query(`SELECT * FROM flight`);
+     return res.status(200).json(result);
+     
+    })
   
     
-    // app.get("/health", async (_, res: Response) => {
-    //   const isDbConnected = connection.isInitialized;
-    //   const health = {
-    //     timestamp: new Date(),
-    //     status: isDbConnected ? "healthy" : "warning",
-    //     db: isDbConnected ? "connected" : "disconnected",
-    //   };
+    app.get("/health", async (_, res: Response) => {
+      const isDbConnected = connection.isInitialized;
+      const health = {
+        timestamp: new Date(),
+        status: isDbConnected ? "healthy" : "warning",
+        db: isDbConnected ? "connected" : "disconnected",
+      };
 
-    //   res.status(StatusCodes.OK).json(health);
-    // })
+      res.status(StatusCodes.OK).json(health);
+    })
     
     app.use((_req, res: Response, next: NextFunction) => {
         return res.status(404).send("NOT FOUND!")
