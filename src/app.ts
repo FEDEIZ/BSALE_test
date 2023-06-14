@@ -1,11 +1,12 @@
 import express, { NextFunction, Request, Response } from "express";
 import morgan from "morgan"
 import {StatusCodes} from "http-status-codes"
-import { getConnection } from "./db";
+import { dbToCache, getConnection } from "./db";
 
 export async function createApp() : Promise<Express.Application> {
   
    const connection =  await getConnection();
+   //await dbToCache(connection);
 
     const app = express();
 
@@ -26,12 +27,18 @@ export async function createApp() : Promise<Express.Application> {
     })
       
     //routers
-    app.get("/fligths", async (req: Request, res:Response) => {
-     const connection = await getConnection();
-     const result = await connection.manager.query(`SELECT * FROM flight`);
-     return res.status(200).json(result);
-     
-    })
+    // app.get("/", async (req: Request, res:Response) => {
+    //  const connection = await getConnection();
+    //  const flights = await connection.manager.query(`SELECT * FROM flight`);
+    //  const airplanes = await connection.manager.query(`SELECT * FROM airplane`);
+    //  const seats = await connection.manager.query(`SELECT * FROM seat`);
+    //  const boarding_pass = await connection.manager.query(`SELECT * FROM boarding_pass`);
+    //  const passengers = await connection.manager.query(`SELECT * FROM passenger`);
+    //  const purchase = await connection.manager.query(`SELECT * FROM purchase`);
+    //  const seat_types = await connection.manager.query(`SELECT * FROM seat_type`); 
+    //  return res.status(200).json({"flights": flights, "airplanes": airplanes, "seats": seats,
+    //                              "boarding_pass": boarding_pass, "passengers": passengers,"purchase": purchase, "seat_types": seat_types });
+    // })
   
     
     app.get("/health", async (_, res: Response) => {

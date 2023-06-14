@@ -2,7 +2,8 @@ import dotenv from "dotenv";
 
 import { logger } from "./logger";
 import { DataSource } from "typeorm";
-
+import fs from "fs";
+import path from "path";
 
 
 dotenv.config();
@@ -32,4 +33,21 @@ export async function getConnection(): Promise<DataSource> {
         });
     }
     return MySQLDataSource;
+}
+
+export async function dbToCache(conn : DataSource){
+    try{
+    const tables = ['flight', 'airplane', 'seat','boarding_pass', 'passenger', 'purchase', 'seat_type']
+    
+    for(let i=0; i<tables.length; i++){        
+        let data = JSON.stringify(await conn.manager.query(`SELECT * FROM ${tables[i]}`), null, 2);
+        const filePath = path.join(__dirname, "./../.cache", `${tables[i]}.json`);
+        fs.writeFileSync(filePath, data);
+        }
+    }
+    catch (err) {
+        console.error(err);
+      } finally {
+        conn.destroy()
+      }
 }
