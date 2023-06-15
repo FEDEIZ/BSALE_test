@@ -1,12 +1,29 @@
-import { BoardingPassDAO } from "../dao/boardingPass.dao";
+import { GeneralDAO } from "../dao/general.dao";
 import { BoardingPass } from "../domain/boardingPass";
+import { CheckIn } from "../domain/checkIn";
 
 export const autoCheckIn = async (flightId: string) => {
-    const boardingPasses =  await new BoardingPassDAO().search( `SELECT bp.purchase_id, bp.passenger_id, bp.seat_type_id, bp.seat_id FROM boarding_pass bp 
-                                                                WHERE bp.flight_id = ${flightId}
-                                                                ORDER BY bp.purchase_id`);
+    const checkIn : CheckIn = {
+        takeOffDateTime: 0,
+        takeOffAirport: "",
+        landingDateTime: 0,
+        landingAirport: "",
+        airplaneId: 0,
+        passengers: [],
+        flightId: 0
+    }
+
+    // const boardingPasses =  await new GeneralDAO().searchBP( `SELECT bp.purchase_id, bp.passenger_id, bp.seat_type_id, bp.seat_id FROM boarding_pass bp 
+    //                                                             WHERE bp.flight_id = ${flightId}
+    //                                                             ORDER BY bp.purchase_id`);
     
-    //const passenger = await new PassangerDAO().search(`SELECT * FROM passanger`);
+    const flight = await new GeneralDAO().readFlight(flightId);
+    
+    checkIn.flightId = flight.flight_id;
+    checkIn.takeOffAirport = flight.takeoff_airport;
+    checkIn.takeOffDateTime = flight.takeoff_date_time;
+    checkIn.landingAirport = flight.landing_airport;
+    checkIn.airplaneId = flight.airplane_id;
     
     // let purchaseIndex = boardingPasses[0].purchase_id; // first purchase_id
     // const bpByPurchase = [boardingPasses.filter(bp => bp.purchase_id === purchaseIndex)]; // initial value
@@ -24,10 +41,16 @@ export const autoCheckIn = async (flightId: string) => {
     //     }
     // }
 
-    
+    const passengers = await new GeneralDAO().searchPassenger(`SELECT * FROM passenger p 
+                                                                JOIN boarding_pass bp ON p.passenger_id = bp.passenger_id 
+                                                                WHERE bp.flight_id = ${flightId}
+                                                                ORDER BY bp.purchase_id`
+                                                            );
 
+   
 
-    return boardingPasses;
+    checkIn.passengers = passengers;
+    return checkIn;
 } 
 
 
