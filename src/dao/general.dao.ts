@@ -43,7 +43,9 @@ export class GeneralDAO implements GeneralRepo{
                 boardingPassId: r['boarding_pass_id'],
                 purchaseId: r['purchase_id'],
                 seatTypeId: r['seat_type_id'],
-                seatId: r['seat_id']
+                seatId: r['seat_id'],
+                seatColumn: "",
+                seatRow: 0
             }
             passenger.push(p)
         }
@@ -76,33 +78,62 @@ export class GeneralDAO implements GeneralRepo{
             seats.push(p)
         }
         
+       
         // Ordeno y retorno asientos por cercania privilegiando la clase
-        return [...ordenarAsientosCercania(seats.filter(s => s.seatTypeId === SeatType.HC)),
-                ...ordenarAsientosCercania(seats.filter(s => s.seatTypeId === SeatType.MC)),
-                ...ordenarAsientosCercania(seats.filter(s => s.seatTypeId === SeatType.EC))
-                ] as Seat[];
+        return [
+            ...orderSeats(seats.filter(s => s.seatTypeId === SeatType.HC)),
+            ...orderSeats(seats.filter(s => s.seatTypeId === SeatType.MC)),
+            ...orderSeats(seats.filter(s => s.seatTypeId === SeatType.EC))
+        ];
         
     }
 }
 
-function calculateDistance(seat1: Seat, seat2: Seat): number {
-    const distance = Math.abs(seat1.seatColumn.charCodeAt(0) - seat2.seatColumn.charCodeAt(0)) + Math.abs(seat1.seatRow - seat2.seatRow);
-    return distance;
-}
+
+function orderSeats(seats: Seat[]) {
+    const orderedSeats : Seat[] = [];
+    const orderedSeatsCR : object[] = [];
+    const seatsCR = seats.map(s => {return {c: s.seatColumn.charCodeAt(0), r: s.seatRow}})
+    // Ordenar los asientos por fila y columna
+    seatsCR.sort((a, b) => {
+      if (a.r !== b.r) {
+        return a.r - b.r; // Ordenar por fila ascendente
+      } else {
+        return a.c - b.c; // Ordenar por columna ascendente
+      }
+    });
   
-function ordenarAsientosCercania(asientos: Seat[]): Seat[] {
-// Crear una copia del array original
-const sortedAsientos: Seat[] = [...asientos];
-
-// Obtener el primer asiento (puede ser aleatorio)
-const currentSeat = sortedAsientos[0];
-
-// Ordenar los asientos restantes basado en la distancia al asiento actual
-sortedAsientos.sort((seat1, seat2) => {
-    const distance1 = calculateDistance(currentSeat, seat1);
-    const distance2 = calculateDistance(currentSeat, seat2);
-    return distance1 - distance2;
-});
-
-return sortedAsientos;
-}
+    orderedSeatsCR.push(seatsCR[0]); // Agregar el primer asiento a la lista ordenada
+    seatsCR.splice(0, 1); // Eliminar el primer asiento del array original
+  
+    while (seatsCR.length) {
+      let currentSeat = orderedSeatsCR[orderedSeatsCR.length - 1]; // Último asiento agregado
+  
+      // Buscar un asiento con igual fila pero columna adyacente
+      let adjacentSeat = seatsCR.find(seat => seat.r === currentSeat['r'] && Math.abs(seat.c - currentSeat['c']) === 1);
+  
+      // Si no se encuentra, buscar un asiento con igual columna pero fila adyacente
+      if (!adjacentSeat) {
+        adjacentSeat = seatsCR.find(seat => seat.c === currentSeat['c'] && Math.abs(seat.r -currentSeat['r']) === 1);
+      }
+  
+      // Si no se encuentra ninguno de los casos anteriores, buscar el asiento más cercano en distancia
+      if (!adjacentSeat) {
+        adjacentSeat = seatsCR.reduce((closestSeat, seat) => {
+          const currentDistance = Math.abs(seat.c - currentSeat['c']) + Math.abs(seat.r - currentSeat['r']);
+          const closestDistance = Math.abs(closestSeat.c - currentSeat['c']) + Math.abs(closestSeat.r - currentSeat['r']);
+  
+          return currentDistance < closestDistance ? seat : closestSeat;
+        });
+      }
+  
+      orderedSeatsCR.push(adjacentSeat); // Agregar el asiento encontrado a la lista ordenada
+      seatsCR.splice(seatsCR.findIndex(seat => seat === adjacentSeat), 1); // Eliminar el asiento del array original
+    }
+    orderedSeatsCR.forEach(s => {
+        let seat = seats.find(item => item.seatRow === s['r'] && item.seatColumn === String.fromCharCode(s['c']))
+        if(seat) orderedSeats.push(seat);
+    });
+    return orderedSeats;
+  }
+  
