@@ -6,7 +6,7 @@ import { BSaleError } from "./utils";
 import checkIn from "./routes/autoCheckIn";
 
 export async function createApp() : Promise<Express.Application> {
-    //await getConnection();
+    //await dbToCache();
     const app = express();
 
     app.use(express.json())
