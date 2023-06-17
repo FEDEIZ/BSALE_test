@@ -5,3 +5,9 @@ export interface Seat {
     seatTypeId: number;
     airplaneId: number
 }
+
+export enum SeatType{
+    "HC" = 1,
+    "MC" = 2,
+    "EC" = 3
+}
