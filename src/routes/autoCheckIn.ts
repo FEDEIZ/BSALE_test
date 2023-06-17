@@ -6,9 +6,13 @@ import { StatusCodes } from "http-status-codes";
 export default function checkIn(): Router {
     return Router()
         .get("/:id/passengers", async (req: Request, res:Response, next: NextFunction) => {
-            const result = await autoCheckIn(req.params.id);
-            if(!Object.keys(result).length) return res.status(StatusCodes.NOT_FOUND).send({code: StatusCodes.NOT_FOUND, data: {}})
-            return res.send({code: StatusCodes.OK, data: result})
+            try{
+                const result = await autoCheckIn(req.params.id);
+                return res.send({code: StatusCodes.OK, data: result})
+            }
+            catch(error){
+                next(error);
+            } 
         })
     
 }

@@ -2,7 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { GeneralDAO } from "../dao/general.dao";
 import { CheckIn } from "../domain/checkIn";
 import { Passenger } from "../domain/passenger";
-import { Seat } from "../domain/seat";
+import { Seat, SeatType } from "../domain/seat";
 import { BSaleError } from "../utils";
 
 
@@ -20,33 +20,33 @@ export const autoCheckIn = async (flightId: string) => {
     
     const flight = await new GeneralDAO().readFlight(flightId);
         
-    Object.assign(checkIn, flight);
+    if(flight) Object.assign(checkIn, flight);
+    else throw new BSaleError("",StatusCodes.NOT_FOUND);
     
     
     const passengers = await new GeneralDAO().searchPassengerByFlight(flightId);
     
-    // // PASAJEROS CON ASIENTO ASIGNADO AGREGO AL CHECKIN
-    // passengers.filter(p => p.seatId).forEach(p => checkIn.passengers.push(p));
-
-    const freeSeats = await new GeneralDAO().readFreeSeats(passengers.filter(p => p.seatId), flightId )
+    const seatsOrder = await new GeneralDAO().readFreeSeats(flightId )
     
-    return (freeSeats);
-    console.log("pasajeros totales: " + passengers.length, "pasajeros con asiento: " + passengers.filter(p => p.seatId).length, "pasajeros sin asientos: " + passengers.filter(p => !p.seatId).length);
+    checkIn.passengers = setSeats(seatsOrder,passengers);
     
-    return setSeats(freeSeats,passengers);
-
-    //checkIn.passengers = [...setSeats(freeSeats,passengers)]
     return checkIn;
 } 
 
-function setSeats(freeSeats: Seat[], passengers : Passenger[]): Passenger[]{
-    const passengerCheckIn : Passenger[] = [];
+function setSeats(seatsOrder: Seat[], passengers : Passenger[]): Passenger[]{
+    const passengerCheckedIn : Passenger[] = [];
+
 
   // PASAJEROS CON ASIENTO ASIGNADO AGREGO AL CHECKIN
-  passengers.filter(p => p.seatId).forEach(p => passengerCheckIn.push(p));
+  passengers.filter(p => p.seatId).forEach(p => passengerCheckedIn.push(p));
   
-  const passengersToCheckIn = passengers.filter(p => !p.seatId);
+  // ASIENTOS LIBRES Y OCUPADOS
+  const fullSeats = passengers.filter(p => p.seatId).map(p => p.seatId);
+  const freeSeats = seatsOrder.filter(s => !fullSeats.includes(s.seatId))
+
+
   //VERIFICO ESPACIO RESTANTE PARA PASAJEROS SIN ASIENTO
+  const passengersToCheckIn = passengers.filter(p => !p.seatId);
   if(passengersToCheckIn.length > freeSeats.length) throw new BSaleError("There is no space left for this flight for all the passenger list without seat assigned")
   
   //ASIGNO ASIENTOS CON CRITERIO LOGICO
@@ -56,7 +56,28 @@ function setSeats(freeSeats: Seat[], passengers : Passenger[]): Passenger[]{
   
 
 
-  return passengersToCheckIn;
+  while(passengersToCheckIn.length){
+    for(let purchase of passengersByPurchaseId){
+
+        for(let i=0; i<purchase.length;i++){
+          purchase[i].seatId = freeSeats[0].seatId;
+          // purchase[i].seatColumn = freeSeats[0].seatColumn;
+          // purchase[i].seatRow = freeSeats[0].seatRow;
+          passengerCheckedIn.push(purchase[i])
+          freeSeats.shift();
+          let index = passengersToCheckIn.findIndex(p => p.dni === purchase[i].dni);
+          passengersToCheckIn.splice(index, 1); 
+        }       
+    
+    }
+
+  }
+  
+  // console.log(passengerCheckedIn.find((p, index) => {
+  //   if(p[index +1]) return p[index].age <18 && p[index].purchaseId !== p[index+1].purchaseId  }));
+  // const minors = passengerCheckedIn.filter(p => p.age <18);
+  // console.log(passengerCheckedIn.filter(p => minors.some(m => m.purchaseId === p.purchaseId )));
+  return passengerCheckedIn;
 }
 
 function groupPassengersByPurchaseId(passengers: Passenger[]): Passenger[][] {
@@ -82,11 +103,11 @@ function groupPassengersByPurchaseId(passengers: Passenger[]): Passenger[][] {
   groupedPassengers.forEach((subarray) => {
     subarray.sort((a, b) => {
       if (a.age < 18 && b.age >= 18) {
-        return 1; // Move passenger over 18 to the next index
+        return -1; 
       } else if (a.age >= 18 && b.age < 18) {
-        return -1; // Move passenger under 18 to the previous index
+        return 1; 
       } else {
-        return 0; // Maintain the original order
+        return 0; 
       }
     });
   });

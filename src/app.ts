@@ -46,6 +46,7 @@ export async function createApp() : Promise<Express.Application> {
   
     app.use((err: BSaleError | Error, _req: Request, res: Response, _next: NextFunction) => {
       if (err instanceof BSaleError) {
+      if(err.code === StatusCodes.NOT_FOUND) return res.status(err.code).send({code: err.code, data: {}})
       return res.status(err.code || 400).send({
         code: err.code,
         errors: err.message

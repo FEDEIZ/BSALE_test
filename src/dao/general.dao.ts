@@ -8,19 +8,22 @@ import { Seat, SeatType } from "../domain/seat";
 
 export class GeneralDAO implements GeneralRepo{
 
-    async readFlight(id: string | undefined): Promise<Flight> {
+    async readFlight(id: string | undefined): Promise<Flight | undefined> {
         let sql = `SELECT * FROM flight WHERE flight.flight_id = ${id}`;
         const conn = await getConnection();
         const result = await conn.manager.query(sql);
-        const flight: Flight = {
-            flightId: result[0]['flight_id'],
-            takeoffDateTime: result[0]['takeoff_date_time'],
-            takeoffAirport: result[0]['takeoff_airport'],
-            landingDateTime: result[0]['landing_date_time'],
-            landingAirport: result[0]['landing_airport'],
-            airplaneId: result[0]['airplane_id']
+        if(result[0]){
+            const flight: Flight = {
+                flightId: result[0]['flight_id'],
+                takeoffDateTime: result[0]['takeoff_date_time'],
+                takeoffAirport: result[0]['takeoff_airport'],
+                landingDateTime: result[0]['landing_date_time'],
+                landingAirport: result[0]['landing_airport'],
+                airplaneId: result[0]['airplane_id']
+            }
+            return flight as Flight;
         }
-        return flight as Flight;
+        return undefined;
     }
 
     async searchPassengerByFlight(id: string): Promise<Passenger[]> {
@@ -44,8 +47,6 @@ export class GeneralDAO implements GeneralRepo{
                 purchaseId: r['purchase_id'],
                 seatTypeId: r['seat_type_id'],
                 seatId: r['seat_id'],
-                seatColumn: "",
-                seatRow: 0
             }
             passenger.push(p)
         }
