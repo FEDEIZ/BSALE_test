@@ -1,8 +1,8 @@
 export interface Flight{
-    flight_id: number;
-    takeoff_date_time: number;
-    takeoff_airport: string;
-    landing_date_time: number;
-    landing_airport: string;
-    airplane_id: number;
+    flightId: number;
+    takeoffDateTime: number;
+    takeoffAirport: string;
+    landingDateTime: number;
+    landingAirport: string;
+    airplaneId: number;
 }

@@ -2,8 +2,8 @@ import { Passenger } from "./passenger";
 
 export interface CheckIn{
     flightId: number,
-    takeOffDateTime: number,
-    takeOffAirport: string, 
+    takeoffDateTime: number,
+    takeoffAirport: string, 
     landingDateTime: number, 
     landingAirport: string,
     airplaneId: number,

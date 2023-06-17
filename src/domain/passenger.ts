@@ -7,5 +7,5 @@ export interface Passenger{
     boardingPassId: number,
     purchaseId: number,
     seatTypeId: number,
-    seatId: number
+    seatId: number | null;
 }
