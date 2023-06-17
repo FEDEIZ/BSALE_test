@@ -47,6 +47,7 @@ export class GeneralDAO implements GeneralRepo{
                 purchaseId: r['purchase_id'],
                 seatTypeId: r['seat_type_id'],
                 seatId: r['seat_id'],
+                seat: ""
             }
             passenger.push(p)
         }

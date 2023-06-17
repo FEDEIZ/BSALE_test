@@ -7,5 +7,5 @@ export interface CheckIn{
     landingDateTime: number, 
     landingAirport: string,
     airplaneId: number,
-    passengers: Passenger[]
+    passengers: any[]
 }

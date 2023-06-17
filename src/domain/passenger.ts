@@ -8,5 +8,5 @@ export interface Passenger{
     purchaseId: number,
     seatTypeId: number,
     seatId: number | null;
-
+    seat: string,
 }

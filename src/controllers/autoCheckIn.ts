@@ -61,8 +61,7 @@ function setSeats(seatsOrder: Seat[], passengers : Passenger[]): Passenger[]{
 
         for(let i=0; i<purchase.length;i++){
           purchase[i].seatId = freeSeats[0].seatId;
-          // purchase[i].seatColumn = freeSeats[0].seatColumn;
-          // purchase[i].seatRow = freeSeats[0].seatRow;
+          purchase[i].seat = `${freeSeats[0].seatColumn}${freeSeats[0].seatRow}`;
           passengerCheckedIn.push(purchase[i])
           freeSeats.shift();
           let index = passengersToCheckIn.findIndex(p => p.dni === purchase[i].dni);
