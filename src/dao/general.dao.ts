@@ -4,7 +4,7 @@ import { getConnection } from "../db";
 import { Passenger } from "../domain/passenger";
 import { GeneralRepo } from "../repositories/general.repo";
 import { Flight } from "../domain/flight";
-import { Seat } from "../domain/seat";
+import { Seat, SeatType } from "../domain/seat";
 
 export class GeneralDAO implements GeneralRepo{
 
@@ -50,24 +50,21 @@ export class GeneralDAO implements GeneralRepo{
         return passenger as Passenger[];
     }
   
-    async readFreeSeats(passengers: Passenger[], id: string) {
+    async readFreeSeats(id: string) {
         let sql = `SELECT s.seat_id, s.seat_column, s.seat_row, s.seat_type_id
                     FROM seat s 
                     JOIN airplane a ON s.airplane_id = a.airplane_id
                     JOIN flight f ON f.airplane_id = a.airplane_id               
                     WHERE f.flight_id = ${id}
-                    ORDER BY s.seat_row, s.seat_column;`;
+                    ORDER BY s.seat_row,s.seat_column, s.seat_type_id;`;
         
         const conn = await getConnection();
         const result = await conn.manager.query(sql);
         
         const seats : Seat[] = [];
 
-    //ASIENTOS OCUPADOS
-     const fullSeats = passengers.map(p => p.seatId);
-
-    //ASIENTOS LIBRES
-     //const freeSeats = result.filter(r => !fullSeats.includes(r['seat_id']));
+   
+    
         for(let r of result){
             let p: Seat = {
                 seatId: r['seat_id'],
@@ -78,8 +75,13 @@ export class GeneralDAO implements GeneralRepo{
             }
             seats.push(p)
         }
-        return ordenarAsientosCercania(seats).filter(s => !fullSeats.includes(s.seatId)) as Seat[];
-        return seats as Seat[];
+        
+        // Ordeno y retorno asientos por cercania privilegiando la clase
+        return [...ordenarAsientosCercania(seats.filter(s => s.seatTypeId === SeatType.HC)),
+                ...ordenarAsientosCercania(seats.filter(s => s.seatTypeId === SeatType.MC)),
+                ...ordenarAsientosCercania(seats.filter(s => s.seatTypeId === SeatType.EC))
+                ] as Seat[];
+        
     }
 }
 
