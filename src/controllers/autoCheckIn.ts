@@ -61,7 +61,8 @@ function setSeats(seatsOrder: Seat[], passengers : Passenger[]): Passenger[]{
 
         for(let i=0; i<purchase.length;i++){
           purchase[i].seatId = freeSeats[0].seatId;
-          purchase[i].seat = `${freeSeats[0].seatColumn}${freeSeats[0].seatRow}`;
+          purchase[i].seatColumn = freeSeats[0].seatColumn;
+          purchase[i].seatRow = freeSeats[0].seatRow;
           passengerCheckedIn.push(purchase[i])
           freeSeats.shift();
           let index = passengersToCheckIn.findIndex(p => p.dni === purchase[i].dni);
@@ -72,10 +73,41 @@ function setSeats(seatsOrder: Seat[], passengers : Passenger[]): Passenger[]{
 
   }
   
-  // console.log(passengerCheckedIn.find((p, index) => {
-  //   if(p[index +1]) return p[index].age <18 && p[index].purchaseId !== p[index+1].purchaseId  }));
-  // const minors = passengerCheckedIn.filter(p => p.age <18);
-  // console.log(passengerCheckedIn.filter(p => minors.some(m => m.purchaseId === p.purchaseId )));
+  //Ultimo chequeo para menores
+  const minors = passengerCheckedIn.filter(p => p.age <18);
+
+  for(let i=0; i<minors.length; i++){
+    
+    let minorIndex = passengerCheckedIn.findIndex( p => p.dni === minors[i].dni);
+    let companion = [passengerCheckedIn[minorIndex-1], passengerCheckedIn[minorIndex+1]];
+
+    if(!companion.some(c => c.seatRow === minors[i].seatRow && c.purchaseId === minors[i].purchaseId)){
+
+
+      const strange = companion.find(c => c.purchaseId !== minors[i].purchaseId);
+      const indexStrange = passengerCheckedIn.findIndex(p => p.dni === strange?.dni);
+      const adult = companion.find(c => c.purchaseId === minors[i].purchaseId);
+      const indexAdult = passengerCheckedIn.findIndex(p => p.dni === adult?.dni);
+
+      if(adult && strange){
+      let aux = {...strange};
+        strange.seatId = adult.seatId;
+        strange.seatRow = adult.seatRow;
+        strange.seatColumn = adult.seatColumn;
+
+        adult.seatId = aux.seatId;
+        adult.seatRow = aux.seatRow;
+        adult.seatColumn = aux.seatColumn;
+
+        passengerCheckedIn[indexAdult] = adult;
+        passengerCheckedIn[indexStrange] = strange;
+
+      }
+
+
+    }
+  }
+  
   return passengerCheckedIn;
 }
 
@@ -110,6 +142,9 @@ function groupPassengersByPurchaseId(passengers: Passenger[]): Passenger[][] {
       }
     });
   });
+
+
+  
 
   return groupedPassengers;
 }
