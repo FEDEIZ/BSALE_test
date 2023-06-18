@@ -1,4 +1,3 @@
-import { Passenger } from "./passenger";
 
 export interface CheckIn{
     flightId: number,

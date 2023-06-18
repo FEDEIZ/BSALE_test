@@ -1,4 +1,3 @@
-import { DataSource, EntityManager, SelectQueryBuilder } from "typeorm";
 import { getConnection } from "../db";
 
 import { Passenger } from "../domain/passenger";
