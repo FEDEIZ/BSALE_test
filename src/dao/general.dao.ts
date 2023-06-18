@@ -55,7 +55,7 @@ export class GeneralDAO implements GeneralRepo{
         return passenger as Passenger[];
     }
   
-    async readFreeSeats(id: string) {
+    async searchSeatsByFlight(id: string): Promise<Seat[]> {
         let sql = `SELECT s.seat_id, s.seat_column, s.seat_row, s.seat_type_id
                     FROM seat s 
                     JOIN airplane a ON s.airplane_id = a.airplane_id
@@ -68,8 +68,6 @@ export class GeneralDAO implements GeneralRepo{
         
         const seats : Seat[] = [];
 
-   
-    
         for(let r of result){
             let p: Seat = {
                 seatId: r['seat_id'],
@@ -81,62 +79,9 @@ export class GeneralDAO implements GeneralRepo{
             seats.push(p)
         }
         
+       return seats;
        
-        // Ordeno y retorno asientos por cercania privilegiando la clase
-        return [
-            ...orderSeats(seats.filter(s => s.seatTypeId === SeatType.HC)),
-            ...orderSeats(seats.filter(s => s.seatTypeId === SeatType.MC)),
-            ...orderSeats(seats.filter(s => s.seatTypeId === SeatType.EC))
-        ];
         
     }
 }
 
-
-function orderSeats(seats: Seat[]) {
-    const orderedSeats : Seat[] = [];
-    const orderedSeatsCR : object[] = [];
-    const seatsCR = seats.map(s => {return {c: s.seatColumn.charCodeAt(0), r: s.seatRow}})
-    // Ordenar los asientos por fila y columna
-    seatsCR.sort((a, b) => {
-      if (a.r !== b.r) {
-        return a.r - b.r; // Ordenar por fila ascendente
-      } else {
-        return a.c - b.c; // Ordenar por columna ascendente
-      }
-    });
-  
-    orderedSeatsCR.push(seatsCR[0]); // Agregar el primer asiento a la lista ordenada
-    seatsCR.splice(0, 1); // Eliminar el primer asiento del array original
-  
-    while (seatsCR.length) {
-      let currentSeat = orderedSeatsCR[orderedSeatsCR.length - 1]; // Último asiento agregado
-  
-      // Buscar un asiento con igual fila pero columna adyacente
-      let adjacentSeat = seatsCR.find(seat => seat.r === currentSeat['r'] && Math.abs(seat.c - currentSeat['c']) === 1);
-  
-      // Si no se encuentra, buscar un asiento con igual columna pero fila adyacente
-      if (!adjacentSeat) {
-        adjacentSeat = seatsCR.find(seat => seat.c === currentSeat['c'] && Math.abs(seat.r -currentSeat['r']) === 1);
-      }
-  
-      // Si no se encuentra ninguno de los casos anteriores, buscar el asiento más cercano en distancia
-      if (!adjacentSeat) {
-        adjacentSeat = seatsCR.reduce((closestSeat, seat) => {
-          const currentDistance = Math.abs(seat.c - currentSeat['c']) + Math.abs(seat.r - currentSeat['r']);
-          const closestDistance = Math.abs(closestSeat.c - currentSeat['c']) + Math.abs(closestSeat.r - currentSeat['r']);
-  
-          return currentDistance < closestDistance ? seat : closestSeat;
-        });
-      }
-  
-      orderedSeatsCR.push(adjacentSeat); // Agregar el asiento encontrado a la lista ordenada
-      seatsCR.splice(seatsCR.findIndex(seat => seat === adjacentSeat), 1); // Eliminar el asiento del array original
-    }
-    orderedSeatsCR.forEach(s => {
-        let seat = seats.find(item => item.seatRow === s['r'] && item.seatColumn === String.fromCharCode(s['c']))
-        if(seat) orderedSeats.push(seat);
-    });
-    return orderedSeats;
-  }
-  

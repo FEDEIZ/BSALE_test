@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from "express";
-import {autoCheckIn} from "./../controllers/autoCheckIn"
+import autoCheckIn from "./../controllers/autoCheckIn"
 import { BSaleError } from "../utils";
 import { StatusCodes } from "http-status-codes";
 
