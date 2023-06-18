@@ -57,6 +57,10 @@ export async function createApp() : Promise<Express.Application> {
     
     });
 
+    app.use("*", (_req: Request, res: Response, _next: NextFunction) =>
+       res.status(StatusCodes.BAD_REQUEST).send({ code: 400 , errors: 'could not connect to db'})
+    );
+
   return app;
 }
 
