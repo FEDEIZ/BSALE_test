@@ -1,12 +1,12 @@
 import express, { NextFunction, Request, Response } from "express";
 import morgan from "morgan"
 import {StatusCodes} from "http-status-codes"
-import { dbToCache, getConnection } from "./db";
+import { getConnection } from "./db";
 import { BSaleError } from "./utils";
 import checkIn from "./routes/autoCheckIn";
 
 export async function createApp() : Promise<Express.Application> {
-    //await dbToCache();
+
     const app = express();
 
     app.use(express.json())
