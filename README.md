@@ -1,5 +1,14 @@
 # BSALE_test
 
+## Archivo .env
+
+`PORT=3001
+DB_URL=mdb-test.c6vunyturrl6.us-west-1.rds.amazonaws.com
+DB_PORT=3306
+DB_USER=bsale_test
+DB_PASSWORD=bsale_test
+DB_NAME=airline`
+
 Para ejecutar la API se debe correr el comando:
 
 `npm start`
