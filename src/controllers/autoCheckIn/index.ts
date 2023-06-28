@@ -7,7 +7,12 @@ import { orderFreeSeats  } from "./orderFreeSeats";
 import { SeatType } from "../../domain/seat";
 
 
-export default  async function(flightId: string) {
+export class AutoCheckInController {
+ 
+  constructor(private repository: GeneralDAO){}
+
+  async getAutoCheckIn(flightId: string) : Promise<CheckIn>{
+
     const checkIn : CheckIn = {
       flightId: 0,
       takeoffDateTime: 0,
@@ -19,15 +24,15 @@ export default  async function(flightId: string) {
     }
 
     
-    const flight = await new GeneralDAO().readFlight(flightId);
+    const flight = await this.repository.readFlight(flightId);
         
     if(flight) Object.assign(checkIn, flight);
     else throw new BSaleError("",StatusCodes.NOT_FOUND);
     
     
-    const passengers = await new GeneralDAO().searchPassengerByFlight(flightId);
+    const passengers = await this.repository.searchPassengerByFlight(flightId);
     
-    const seats = await new GeneralDAO().searchSeatsByFlight(flightId )
+    const seats = await this.repository.searchSeatsByFlight(flightId )
     
     // Ordering seats for every seat type. HC has best priority
     const freeSeats = [
@@ -39,4 +44,5 @@ export default  async function(flightId: string) {
     checkIn.passengers = setSeats(freeSeats,passengers).map(({ seatRow,seatColumn, ...rest }) => rest);
     
     return checkIn;
+  }
 }
